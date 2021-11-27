@@ -1,6 +1,5 @@
 package processorSharingSingolo;
 
-import desUtils.Rngs;
 import reteDiCode.CenterEnum;
 import reteDiCode.EventType;
 import reteDiCode.Generator;
@@ -13,14 +12,16 @@ public class Event {
 
     private final EventType type;
 
-    private double time;
+    private double endTime;
+    private double arrivalTime;
 
     public EventType getType() {
         return type;
     }
-    public double getTime(){
-        return time;
+    public double getEndTime(){
+        return endTime;
     }
+    public double getArrivalTime() { return arrivalTime; }
     public CenterEnum getNextCenter(){
         return nextCenter;
     }
@@ -37,30 +38,33 @@ public class Event {
         switch (type){
             case ARRIVALVM1:
                 t.selectStream(1);
-                time = currentTime + t.exponential(MEAN_INTERARRIVAL_VM1);
+                endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_VM1);
                 break;
 
             case ARRIVALS3:
                 t.selectStream(3);
-                time = currentTime + t.exponential(MEAN_INTERARRIVAL_S3);
+                endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_S3);
                 break;
 
             case ARRIVALVM2CPU:
                 t.selectStream(5);
-                time = currentTime + t.exponential(MEAN_INTERARRIVAL_VM2CPU);
+                endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_VM2CPU);
                 break;
 
             case COMPLETATIONVM1:
                 t.selectStream(7);
-                time = currentTime + t.exponential(MEAN_SERVICE_TIME_VM1) * (numJobsInServer+1);
+                arrivalTime = currentTime;
+                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM1) * (numJobsInServer+1);
 
 
                 t.selectStream(37);
                 routingProbability = t.uniform( 0, 1);
 
-                if(routingProbability<P10){
+                if(routingProbability<P10) {
                     this.nextCenter = null;
-                } else if (P10 <= routingProbability && routingProbability < P10+P12){
+                }else if (P10 <= routingProbability && routingProbability < P10+P11){
+                    this.nextCenter = CenterEnum.VM1;
+                } else if (P10+P11 <= routingProbability && routingProbability < P10+P11+P12){
                     this.nextCenter = CenterEnum.S3;
                 } else {
                     this.nextCenter = CenterEnum.VM2CPU;
@@ -71,7 +75,8 @@ public class Event {
 
             case COMPLETATIONS3:
                 t.selectStream(9);
-                time = currentTime + t.exponential(MEAN_SERVICE_TIME_S3);
+                arrivalTime = currentTime;
+                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_S3);
 
 
                 t.selectStream(39);
@@ -79,8 +84,10 @@ public class Event {
 
                 if(routingProbability<P20){
                     this.nextCenter = null;
-                } else if (P20 <= routingProbability && routingProbability < P20+P21){
+                } else if (P20 <= routingProbability && routingProbability < P20+P21) {
                     this.nextCenter = CenterEnum.VM1;
+                } else if (P20+P21 <= routingProbability && routingProbability < P20+P21+P22){
+                    this.nextCenter = CenterEnum.S3;
                 } else {
                     this.nextCenter = CenterEnum.VM2CPU;
                 }
@@ -90,7 +97,8 @@ public class Event {
 
             case COMPLETATIONVM2CPU:
                 t.selectStream(11);
-                time = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2CPU) * (numJobsInServer+1);
+                arrivalTime = currentTime;
+                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2CPU) * (numJobsInServer+1);
 
 
                 t.selectStream(41);
@@ -100,8 +108,10 @@ public class Event {
                     this.nextCenter = null;
                 } else if (P30 <= routingProbability && routingProbability < P30+P31){
                     this.nextCenter = CenterEnum.VM1;
-                } else if(P30+P31 <= routingProbability && routingProbability < P30+P31+P32){
+                } else if(P30+P31 <= routingProbability && routingProbability < P30+P31+P32) {
                     this.nextCenter = CenterEnum.S3;
+                } else if (P30+P31+P32 <= routingProbability && routingProbability < P30+P31+P32+P33) {
+                    this.nextCenter = CenterEnum.VM2CPU;
                 } else {
                     this.nextCenter = CenterEnum.VM2BAND;
                 }
@@ -110,7 +120,8 @@ public class Event {
 
             case COMPLETATIONVM2BAND:
                 t.selectStream(13);
-                time = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2BAND) * (numJobsInServer+1);
+                arrivalTime = currentTime;
+                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2BAND) * (numJobsInServer+1);
 
                 t.selectStream(43);
                 routingProbability = t.uniform( 0, 1);
@@ -141,9 +152,9 @@ public class Event {
      * */
     public void updateTime(double changeTime, double numJobsInServer, boolean isNextEventArrival){
         if (isNextEventArrival) {
-            time = changeTime + (time - changeTime) * (numJobsInServer + 1) / numJobsInServer;
+            endTime = changeTime + (endTime - changeTime) * (numJobsInServer + 1) / numJobsInServer;
         } else {
-            time = changeTime + (time - changeTime) * (numJobsInServer - 1) / numJobsInServer;
+            endTime = changeTime + (endTime - changeTime) * (numJobsInServer - 1) / numJobsInServer;
         }
     }
 
@@ -151,7 +162,7 @@ public class Event {
     @Override
     public String toString(){
         String string = "";
-        string = string + type + " - " + time;
+        string = string + type + " - " + endTime;
         return string;
     }
 }

@@ -2,7 +2,7 @@ package reteDiCode;
 
 import desUtils.Rvms;
 
-public class BetweenRunsMetrics {
+public class BetweenRunsMetric {
 
     private static double CONFIDENCE = 0.95;
     private static Rvms rvms = new Rvms();
@@ -11,7 +11,7 @@ public class BetweenRunsMetrics {
     private double sampleMean;
     private double vi;
 
-    public BetweenRunsMetrics(){
+    public BetweenRunsMetric(){
         sampleMean = 0.0;
 
         vi = 0.0;
@@ -36,10 +36,10 @@ public class BetweenRunsMetrics {
         return sampleMean;
     }
 
-    public double getSampleVariance(){
+/*    public double getSampleVariance(){
         return vi / i;
     }
-
+*/
     public double[] getConfidenceInterval(){
         double alpha = 1-CONFIDENCE;
         double criticalValue = rvms.idfStudent(i-1, 1 - alpha / 2);

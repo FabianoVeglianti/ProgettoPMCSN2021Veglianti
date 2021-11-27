@@ -1,6 +1,5 @@
 package reteDiCode;
 
-import desUtils.Rngs;
 import processorSharingSingolo.Event;
 
 import java.util.HashMap;
@@ -45,9 +44,9 @@ public class EventList {
         for(EventType eventType: EventType.values()){
             Event event = eventList.get(eventType);
             if(event != null){
-                if(event.getTime() < time){
+                if(event.getEndTime() < time){
                     type = eventType;
-                    time = event.getTime();
+                    time = event.getEndTime();
                 }
             }
         }
