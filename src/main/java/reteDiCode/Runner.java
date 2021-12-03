@@ -10,24 +10,35 @@ import writer.DebugCSVWriter;
 
 import java.util.ArrayList;
 
+import static reteDiCode.SchedulingDisciplineEnum.*;
+
 
 public class Runner {
 
     public static final double START = 0.0;
     private static double current;
     private static char[] networkConfigurationCodes = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'};
-    private static char[] temp = {'B'};
     private static double currentCounterLimit = 0;
     private static int counter = 0;
 
     private static char actualConfiguration;
 
     private static void initServers(Server[] servers){
-        Server serverVM1 = new Server(CenterEnum.VM1);
-        Server serverS3 = new Server(CenterEnum.S3);
-        Server serverVM2CPU = new Server(CenterEnum.VM2CPU);
-        Server serverVM2Band = new Server(CenterEnum.VM2BAND);
-
+        Server serverVM1;
+        Server serverS3;
+        Server serverVM2CPU;
+        Server serverVM2Band;
+        if(Params.FIFO) {
+            serverVM1 = new Server(CenterEnum.VM1, FIFO);
+            serverS3 = new Server(CenterEnum.S3, IS);
+            serverVM2CPU = new Server(CenterEnum.VM2CPU, FIFO);
+            serverVM2Band = new Server(CenterEnum.VM2BAND, FIFO);
+        } else {
+            serverVM1 = new Server(CenterEnum.VM1, PS);
+            serverS3 = new Server(CenterEnum.S3, IS);
+            serverVM2CPU = new Server(CenterEnum.VM2CPU, PS);
+            serverVM2Band = new Server(CenterEnum.VM2BAND, PS);
+        }
         servers[0] = serverVM1;
         servers[1] = serverS3;
         servers[2] = serverVM2CPU;
@@ -35,6 +46,12 @@ public class Runner {
     }
 
     public static void main(String[] args) {
+
+        if(Params.FIFO && Params.PS){
+            System.err.println("Più di una disciplina di scheduling abilitata, errore!");
+            System.exit(-1);
+        }
+
         Generator generator = new Generator();
         NetworkConfiguration networkConfiguration = NetworkConfiguration.getInstance();
 
@@ -71,7 +88,7 @@ public class Runner {
         RoutingMatrix routingMatrix = new RoutingMatrix();
         ArrivalsCounter arrivalsCounter = new ArrivalsCounter();
         ServiceTime serviceTime = new ServiceTime(servers);
-
+        currentCounterLimit = Double.MAX_VALUE;
         for(int i = 0; i < Params.NUM_REPLICAS; i++) {
             System.out.println("Configurazione: " + configuration + ". Replica: " + i + " ...");
             current = START;
@@ -83,6 +100,36 @@ public class Runner {
 
             int iterations = 0;
             while (iterations < Params.DEBUG_ITERATIONS) {
+
+
+            /*
+                ArrayList<Event> events = new ArrayList<>();
+                System.out.println("Current at iteration " + iterations + " = " + current);
+                for(EventType type: eventList.eventList.keySet()){
+                    if(eventList.eventList.get(type) != null){
+                        events.add(eventList.eventList.get(type));
+                    } else {
+                        System.out.println(type + " nessun evento programmato.");
+                    }
+                }
+                events.sort((o1, o2) -> {
+                    if(o1.getEndTime() - ( o2).getEndTime() > 0) {
+                        return 1;
+                    } else if (( o1).getEndTime() - ( o2).getEndTime() < 0) {
+                        return -1;
+                    }
+                    else {
+                        return 0;
+                    }
+                });
+                for(Event evento: events){
+                    System.out.println(evento.toString());
+                }
+            */
+
+
+
+
                 Event nextEvent = eventList.removeNextEvent();
 
                 EventType nextEventType = nextEvent.getType();
@@ -200,6 +247,7 @@ public class Runner {
                 iterations = 0;
                 //while (current < currentCounterLimit || !systemEmpty(eventList)) {
                 while (!systemEmpty(eventList)) {
+
                     /*
                     ArrayList<Event> events = new ArrayList<>();
                     System.out.println("Current at iteration " + iterations + " = " + current);
@@ -211,9 +259,9 @@ public class Runner {
                         }
                     }
                     events.sort((o1, o2) -> {
-                        if(o1.getTime() - ( o2).getTime() > 0) {
+                        if(o1.getEndTime()- ( o2).getEndTime() > 0) {
                             return 1;
-                        } else if (( o1).getTime() - ( o2).getTime() < 0) {
+                        } else if (( o1).getEndTime() - ( o2).getEndTime() < 0) {
                             return -1;
                         }
                         else {
@@ -224,6 +272,19 @@ public class Runner {
                         System.out.println(evento.toString());
                     }
                     System.out.println("\n");
+                    */
+
+                    /*
+                    for(Server server_ : servers){
+                        if(server_.getDiscipline() == FIFO) {
+                            System.out.println("\n" + server_.getType());
+                            int positionInList = 0;
+                            for (Event event_ : server_.getJobsInCenterList()) {
+                                System.out.println(positionInList + " " + event_.getServiceTime() + " " + event_.getEndTime());
+                                positionInList ++;
+                            }
+                        }
+                    }
                     */
 
                     Event nextEvent = eventList.removeNextEvent();
@@ -357,13 +418,15 @@ public class Runner {
 
 
     private static void handleArrival(Server server, Event event, EventList eventList, Generator generator, EventType newEventType){
-        Event newEvent = new Event(newEventType, generator, current, server.getNumJobsInCenter());
+        Event newEvent = new Event(newEventType, generator, current, server.getNumJobsInCenter(), server.getDiscipline());
+
         int position = server.insertJobInCenter(newEvent, current);
+
         if(position == 0){
             eventList.putEvent(newEvent.getType(), newEvent);
         }
 
-        Event newArrival = new Event(event.getType(), generator, current, server.getNumJobsInCenter());
+        Event newArrival = new Event(event.getType(), generator, current, server.getNumJobsInCenter(), server.getDiscipline());
 
         //Blocco gli arrivi dopo un certo istante di tempo, dunque da quel punto in poi il sistema si svuota e basta
         if(newArrival.getEndTime() <= currentCounterLimit) {
@@ -381,7 +444,7 @@ public class Runner {
 
     private static void handleCompletation(Server server, Event event, Generator generator, EventList eventList, Server[] servers){
         server.removeNextEvent();
-        Event newEvent = server.getNextCompletation();
+        Event newEvent = server.getNextCompletation(current);
         if(newEvent != null) {
             eventList.putEvent(newEvent.getType(), newEvent);
         }
@@ -394,25 +457,28 @@ public class Runner {
             switch (nextCenter) {
                 case VM1:
                     Server vm1 = servers[CenterEnum.VM1.getCenterIndex()-1];
-                    newEvent = new Event(EventType.COMPLETATIONVM1, generator, current, vm1.getNumJobsInCenter());
-                    vm1.updateJobsTimeAfterArrival(event);
+                    newEvent = new Event(EventType.COMPLETATIONVM1, generator, current, vm1.getNumJobsInCenter(), vm1.getDiscipline());
+                    if(vm1.getDiscipline() == PS)
+                        vm1.updateJobsTimeAfterArrival(event);
                     routeTo(newEvent, vm1, eventList);
                     break;
                 case S3:
                     Server s3 = servers[CenterEnum.S3.getCenterIndex()-1];
-                    newEvent = new Event(EventType.COMPLETATIONS3, generator, current, s3.getNumJobsInCenter());
+                    newEvent = new Event(EventType.COMPLETATIONS3, generator, current, s3.getNumJobsInCenter(), s3.getDiscipline());
                     routeTo(newEvent, s3, eventList);
                     break;
                 case VM2CPU:
                     Server vm2cpu = servers[CenterEnum.VM2CPU.getCenterIndex()-1];
-                    newEvent = new Event(EventType.COMPLETATIONVM2CPU, generator, current, vm2cpu.getNumJobsInCenter());
-                    vm2cpu.updateJobsTimeAfterArrival(event);
+                    newEvent = new Event(EventType.COMPLETATIONVM2CPU, generator, current, vm2cpu.getNumJobsInCenter(), vm2cpu.getDiscipline());
+                    if(vm2cpu.getDiscipline() == PS)
+                        vm2cpu.updateJobsTimeAfterArrival(event);
                     routeTo(newEvent, vm2cpu, eventList);
                     break;
                 case VM2BAND:
                     Server vm2band = servers[CenterEnum.VM2BAND.getCenterIndex()-1];
-                    newEvent = new Event(EventType.COMPLETATIONVM2BAND, generator, current, vm2band.getNumJobsInCenter());
-                    vm2band.updateJobsTimeAfterArrival(event);
+                    newEvent = new Event(EventType.COMPLETATIONVM2BAND, generator, current, vm2band.getNumJobsInCenter(), vm2band.getDiscipline());
+                    if(vm2band.getDiscipline() == PS)
+                        vm2band.updateJobsTimeAfterArrival(event);
                     routeTo(newEvent, vm2band, eventList);
                     break;
                 default:
@@ -437,29 +503,34 @@ public class Runner {
 
         switch(event.getType()){
             case ARRIVALVM1:
-                vm1.updateJobsTimeAfterArrival(event);
+                if(vm1.getDiscipline() == PS)
+                    vm1.updateJobsTimeAfterArrival(event);
                 handleArrival(vm1, event, eventList, generator, EventType.COMPLETATIONVM1);
                 break;
             case ARRIVALS3:
                 handleArrival(s3, event, eventList, generator, EventType.COMPLETATIONS3);
                 break;
             case ARRIVALVM2CPU:
-                vm2cpu.updateJobsTimeAfterArrival(event);
+                if(vm2cpu.getDiscipline() == PS)
+                    vm2cpu.updateJobsTimeAfterArrival(event);
                 handleArrival(vm2cpu, event, eventList, generator, EventType.COMPLETATIONVM2CPU);
                 break;
             case COMPLETATIONVM1:
-                vm1.updateJobsTimeAfterCompletation(event);
+                if(vm1.getDiscipline() == PS)
+                    vm1.updateJobsTimeAfterCompletation(event);
                 handleCompletation(vm1, event, generator, eventList, servers);
                 break;
             case COMPLETATIONS3:
                 handleCompletation(s3, event, generator, eventList, servers);
                 break;
             case COMPLETATIONVM2CPU:
-                vm2cpu.updateJobsTimeAfterCompletation(event);
+                if(vm2cpu.getDiscipline() == PS)
+                   vm2cpu.updateJobsTimeAfterCompletation(event);
                 handleCompletation(vm2cpu, event, generator, eventList, servers);
                 break;
             case COMPLETATIONVM2BAND:
-                vm2band.updateJobsTimeAfterCompletation(event);
+                if(vm2band.getDiscipline() == PS)
+                    vm2band.updateJobsTimeAfterCompletation(event);
                 handleCompletation(vm2band, event, generator, eventList, servers);
                 break;
             default:

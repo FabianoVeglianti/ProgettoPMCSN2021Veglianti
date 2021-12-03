@@ -38,6 +38,7 @@ public class Params {
     public static double MEAN_SERVICE_TIME_S3 = 1.0;
     public static double MEAN_SERVICE_TIME_VM2CPU;
     public static double MEAN_SERVICE_TIME_VM2BAND;
+    public static double HYPEREXPONENTIAL_P = 0.8;
 
     public static double VM1_PRICE_PER_MINUTE;
     public static double S3_PRICE_PER_REQUEST = 0.02;
@@ -49,6 +50,8 @@ public class Params {
     public static final boolean runBatchMeansSimulation = false;
 
     //simulations parameters
+    public static final boolean FIFO = false;
+    public static final boolean PS = true;
     public static final double NUM_REPLICAS = 64;
 
     //finite horizon parameters

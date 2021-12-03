@@ -2,14 +2,19 @@ package processorSharingSingolo;
 
 import reteDiCode.BetweenRunsMetric;
 import reteDiCode.CenterEnum;
+import reteDiCode.SchedulingDisciplineEnum;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import static reteDiCode.SchedulingDisciplineEnum.*;
 
 public class Server {
 
     //fixed attributes
     private final CenterEnum type;
+    private final SchedulingDisciplineEnum discipline;
+    public SchedulingDisciplineEnum getDiscipline() { return discipline; }
     public CenterEnum getType() {
         return type;
     }
@@ -68,6 +73,7 @@ public class Server {
         arrivi+=1;
     }
 
+    public ArrayList<Event> getJobsInCenterList() { return jobsInCenterList;}
     public int getArrivi(){
         return arrivi;
     }
@@ -110,8 +116,9 @@ public class Server {
         }
     }
 
-    public Server(CenterEnum type){
+    public Server(CenterEnum type, SchedulingDisciplineEnum discipline){
         this.type = type;
+        this.discipline = discipline;
         jobsInCenterList = new ArrayList<>();
 
         departure = 0.0;
@@ -127,32 +134,52 @@ public class Server {
     }
 
     private int findPosition(Event event){
-        int low = 0;
-        int high = jobsInCenterList.size() - 1;
+        if(discipline == FIFO){
+            if(jobsInCenterList.size() > 0){
+                return jobsInCenterList.size();
+            } else {
+                return 0;
+            }
+        } else if (discipline == PS || discipline == IS) {
+            int low = 0;
+            int high = jobsInCenterList.size() - 1;
 
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            Double midTime = jobsInCenterList.get(mid).getEndTime();
-            int cmp = midTime.compareTo(event.getEndTime());
+            while (low <= high) {
+                int mid = (low + high) / 2;
+                Double midTime = jobsInCenterList.get(mid).getEndTime();
+                int cmp = midTime.compareTo(event.getEndTime());
 
-            if (cmp < 0)
-                low = mid + 1;
-            else if (cmp > 0)
-                high = mid - 1;
-            else
-                return mid;
+                if (cmp < 0)
+                    low = mid + 1;
+                else if (cmp > 0)
+                    high = mid - 1;
+                else
+                    return mid;
+            }
+            return low;
         }
-        return low;
+        else {
+            System.err.println("ERRORE NELLA DISCIPLINA DI SCHEDULING");
+            System.exit(-1);
+            return -1;
+        }
     }
 
     public int insertJobInCenter(Event event, double current){
         int position = 0;
         if(jobsInCenterList.size() == 0){
-            jobsInCenterList.add(event);
+            if(discipline == FIFO){
+                event.setEndTime(current);
+            }
         } else{
-            position = findPosition(event);
-            jobsInCenterList.add(position, event);
+            position = findPosition(event); //la posizione è determinata in base alla disciplina di scheduling
+            if(discipline == FIFO){
+                event.setEndTime(jobsInCenterList.get(position-1).getEndTime());
+            }
         }
+            jobsInCenterList.add(position, event);
+
+
         lastArrivalTime = current;
         this.aumentaArrivi();  //DA ELIMINARE
         return position;
@@ -166,11 +193,13 @@ public class Server {
         }
     }
 
-    public Event getNextCompletation(){
-        if (jobsInCenterList.size()>0)
-            return jobsInCenterList.get(0);
-        else
-            return null;
+    public Event getNextCompletation(double current){
+        if (jobsInCenterList.size()>0) {
+            Event nextCompletation = jobsInCenterList.get(0);
+            return nextCompletation;
+        } else{
+                return null;
+            }
     }
 
     public void updateJobsTimeAfterCompletation(Event nextEvent){

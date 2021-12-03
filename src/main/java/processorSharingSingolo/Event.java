@@ -3,8 +3,10 @@ package processorSharingSingolo;
 import reteDiCode.CenterEnum;
 import reteDiCode.EventType;
 import reteDiCode.Generator;
+import reteDiCode.SchedulingDisciplineEnum;
 
 import static reteDiCode.Params.*;
+import static reteDiCode.SchedulingDisciplineEnum.FIFO;
 
 public class Event {
 
@@ -14,12 +16,16 @@ public class Event {
 
     private double endTime;
     private double arrivalTime;
+    private double serviceTime;
 
     public EventType getType() {
         return type;
     }
     public double getEndTime(){
         return endTime;
+    }
+    public double getServiceTime(){
+        return serviceTime;
     }
     public double getArrivalTime() { return arrivalTime; }
     public CenterEnum getNextCenter(){
@@ -32,7 +38,7 @@ public class Event {
      * se l'evento è un completamento di un job ne viene effettuato il routing.
      * se l'evento è un completamento di un job in un centro PS, l'istante di completamento dipende dai jobs nel server.
     * */
-    public Event(EventType type, Generator t, double currentTime, double numJobsInServer){
+    public Event(EventType type, Generator t, double currentTime, double numJobsInServer, SchedulingDisciplineEnum serverSchedulingDiscipline){
         this.type = type;
         double routingProbability;
         switch (type){
@@ -52,10 +58,26 @@ public class Event {
                 break;
 
             case COMPLETATIONVM1:
+                t.selectStream(57);
+                double distributionProb = t.uniform(0,1);
+
+
                 t.selectStream(7);
                 arrivalTime = currentTime;
-                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM1) * (numJobsInServer+1);
+                if(serverSchedulingDiscipline == FIFO) {
+                    if(distributionProb < HYPEREXPONENTIAL_P) {
+                        serviceTime = t.exponential(0.5 * 1/HYPEREXPONENTIAL_P * MEAN_SERVICE_TIME_VM1);
+                    } else {
+                        serviceTime = t.exponential(0.5 * 1/(1 - HYPEREXPONENTIAL_P) * MEAN_SERVICE_TIME_VM1);
+                    }
+                } else {
+                    if(distributionProb < HYPEREXPONENTIAL_P) {
+                        endTime = currentTime + t.exponential(0.5 * 1/HYPEREXPONENTIAL_P * MEAN_SERVICE_TIME_VM1) * (numJobsInServer + 1);
+                    } else {
+                        endTime = currentTime + t.exponential(0.5 * 1/(1 - HYPEREXPONENTIAL_P) * MEAN_SERVICE_TIME_VM1) * (numJobsInServer + 1);
+                    }
 
+                }
 
                 t.selectStream(37);
                 routingProbability = t.uniform( 0, 1);
@@ -98,7 +120,12 @@ public class Event {
             case COMPLETATIONVM2CPU:
                 t.selectStream(11);
                 arrivalTime = currentTime;
-                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2CPU) * (numJobsInServer+1);
+                if(serverSchedulingDiscipline == FIFO) {
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2CPU);
+                } else {
+                    endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2CPU) * (numJobsInServer+1);
+                }
+
 
 
                 t.selectStream(41);
@@ -121,7 +148,12 @@ public class Event {
             case COMPLETATIONVM2BAND:
                 t.selectStream(13);
                 arrivalTime = currentTime;
-                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2BAND) * (numJobsInServer+1);
+                if(serverSchedulingDiscipline == FIFO) {
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2BAND);
+                } else {
+                    endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2BAND) * (numJobsInServer+1);
+                }
+
 
                 t.selectStream(43);
                 routingProbability = t.uniform( 0, 1);
@@ -144,6 +176,10 @@ public class Event {
         }
     }
 
+
+    public void setEndTime(double startServiceTime){
+        endTime = startServiceTime + serviceTime;
+    }
 
     /**
      * Aggiorna l'istante in cui l'evento occorre in base al tempo rimanente e al numero di jobs nel server.

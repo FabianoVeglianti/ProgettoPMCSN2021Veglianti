@@ -15,7 +15,7 @@ public class EventList {
         eventList = new HashMap<>();
         for(EventType type: EventType.values()) {
             if (type == EventType.ARRIVALS3 || type == EventType.ARRIVALVM1 || type == EventType.ARRIVALVM2CPU) {
-                Event event = new Event(type, generator, current, 0);
+                Event event = new Event(type, generator, current, 0, null);
                 eventList.put(type, event);
             } else {
                 eventList.put(type, null);
