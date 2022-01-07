@@ -42,19 +42,10 @@ public class Event {
         this.type = type;
         double routingProbability;
         switch (type){
-            case ARRIVALVM1:
-                t.selectStream(1);
-                endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_VM1);
-                break;
 
             case ARRIVALS3:
                 t.selectStream(3);
                 endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_S3);
-                break;
-
-            case ARRIVALVM2CPU:
-                t.selectStream(5);
-                endTime = currentTime + t.exponential(MEAN_INTERARRIVAL_VM2CPU);
                 break;
 
             case COMPLETATIONVM1:
@@ -65,19 +56,12 @@ public class Event {
                 t.selectStream(7);
                 arrivalTime = currentTime;
                 if(serverSchedulingDiscipline == FIFO) {
-                    if(distributionProb < HYPEREXPONENTIAL_P) {
-                        serviceTime = t.exponential(0.5 * 1/HYPEREXPONENTIAL_P * MEAN_SERVICE_TIME_VM1);
-                    } else {
-                        serviceTime = t.exponential(0.5 * 1/(1 - HYPEREXPONENTIAL_P) * MEAN_SERVICE_TIME_VM1);
-                    }
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM1);
                 } else {
-                    if(distributionProb < HYPEREXPONENTIAL_P) {
-                        endTime = currentTime + t.exponential(0.5 * 1/HYPEREXPONENTIAL_P * MEAN_SERVICE_TIME_VM1) * (numJobsInServer + 1);
-                    } else {
-                        endTime = currentTime + t.exponential(0.5 * 1/(1 - HYPEREXPONENTIAL_P) * MEAN_SERVICE_TIME_VM1) * (numJobsInServer + 1);
-                    }
-
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM1);
+                    endTime = currentTime + serviceTime * (numJobsInServer+1);
                 }
+
 
                 t.selectStream(37);
                 routingProbability = t.uniform( 0, 1);
@@ -98,7 +82,8 @@ public class Event {
             case COMPLETATIONS3:
                 t.selectStream(9);
                 arrivalTime = currentTime;
-                endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_S3);
+                serviceTime = t.exponential(MEAN_SERVICE_TIME_S3);
+                endTime = currentTime + serviceTime;
 
 
                 t.selectStream(39);
@@ -123,7 +108,8 @@ public class Event {
                 if(serverSchedulingDiscipline == FIFO) {
                     serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2CPU);
                 } else {
-                    endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2CPU) * (numJobsInServer+1);
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2CPU);
+                    endTime = currentTime + serviceTime * (numJobsInServer+1);
                 }
 
 
@@ -151,7 +137,8 @@ public class Event {
                 if(serverSchedulingDiscipline == FIFO) {
                     serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2BAND);
                 } else {
-                    endTime = currentTime + t.exponential(MEAN_SERVICE_TIME_VM2BAND) * (numJobsInServer+1);
+                    serviceTime = t.exponential(MEAN_SERVICE_TIME_VM2BAND);
+                    endTime = currentTime + serviceTime * (numJobsInServer+1);
                 }
 
 

@@ -25,18 +25,30 @@ public class Server {
     private BetweenRunsMetric wait;
     private BetweenRunsMetric utilization;
     private BetweenRunsMetric population;
+
+    //for batch means only
     private double currentBatchStartTime;
 
+    public void setCurrentBatchStartTime(double currentBatchStartTime) {
+        this.currentBatchStartTime = currentBatchStartTime;
+    }
+
     public  void updateBetweenRunsMetrics(double current){
+        //questi operazioni non ha effetto se non stiamo effettuando simulazioni batch means
+        double lastArrivalTimeInBatch = lastArrivalTime - currentBatchStartTime;
+        double currentBatchDuration = current - currentBatchStartTime;
+
         //in teoria si dovrebbe avere departure/lastArrivalTime, ma ciò crea problemi nel BM
-        if(lastArrivalTime != 0) {
-            throughput.updateMetrics(departure / lastArrivalTime);
-            population.updateMetrics(node / lastArrivalTime);
+        if(lastArrivalTimeInBatch != 0) {
+            throughput.updateMetrics(departure / lastArrivalTimeInBatch);
+            population.updateMetrics(node / lastArrivalTimeInBatch);
         }
         if(departure != 0) {
             wait.updateMetrics(node / departure);
         }
-        utilization.updateMetrics(server/current);
+        utilization.updateMetrics(server/currentBatchDuration);
+
+
 
     }
 
@@ -51,6 +63,18 @@ public class Server {
     public double[] getUtilitationInterval() {return utilization.getConfidenceInterval(); }
 
     public double[] getPopulationInterval() {return population.getConfidenceInterval(); }
+
+    public double[] getThroughputConfidenceIntervalAndAutocorrelationLagOne(){
+        return throughput.getConfidenceIntervalAndAutocorrelationLagOne();
+    }
+
+    public double[] getWaitConfidenceIntervalAndAutocorrelationLagOne(){
+        return wait.getConfidenceIntervalAndAutocorrelationLagOne();
+    }
+
+    public double[] getPopulationConfidenceIntervalAndAutocorrelationLagOne(){
+        return population.getConfidenceIntervalAndAutocorrelationLagOne();
+    }
 
     public void resetBetweenRunsMetrics(){
         wait.resetValue();
@@ -131,6 +155,8 @@ public class Server {
 
         node = 0.0;
         server = 0.0;
+
+        currentBatchStartTime = 0.0;
     }
 
     private int findPosition(Event event){
@@ -218,6 +244,10 @@ public class Server {
         return node/departure;
     }
 
+    public double getAveragePopulation(){
+        return node/lastArrivalTime;
+    }
+
     public double getServiceTime() {
         if(type != CenterEnum.S3) {
             return server / departure;
@@ -247,5 +277,12 @@ public class Server {
         System.out.println("   arrivi .................. =   " + f.format(arrivi));
         System.out.println("   jobs nel centro ......... =   " + f.format(jobsInCenterList.size()));
         System.out.println("");
+    }
+
+
+    public void computeAutocorrelationValues() {
+        wait.computeAutocorrelationValues();
+        throughput.computeAutocorrelationValues();
+        population.computeAutocorrelationValues();
     }
 }

@@ -5,15 +5,15 @@ public class NetworkConfiguration {
     private enum EC2InstanceType {T2Nano, T2Micro, T2Small}
 
     private class EC2Instance{
-        private static final double MEAN_VM1_SERVICE_TIME_T2NANO = 5.0/60.0;
-        private static final double MEAN_VM1_SERVICE_TIME_T2MICRO = 2.0/60.0;
-        private static final double MEAN_VM1_SERVICE_TIME_T2SMALL = 1.0/60.0;
-        private static final double MEAN_VM2CPU_SERVICE_TIME_T2NANO = 12.0/60.0;
-        private static final double MEAN_VM2CPU_SERVICE_TIME_T2MICRO = 6.0/60.0;
-        private static final double MEAN_VM2CPU_SERVICE_TIME_T2SMALL = 4.0/60.0;
-        private static final double MEAN_VM2BAND_SERVICE_TIME_T2NANO = 60.0/60.0;
-        private static final double MEAN_VM2BAND_SERVICE_TIME_T2MICRO = 1.0/3.5;
-        private static final double MEAN_VM2BAND_SERVICE_TIME_T2SMALL = 10.0/60.0;
+        private static final double MEAN_VM1_SERVICE_TIME_T2NANO = 1.0/15.0;
+        private static final double MEAN_VM1_SERVICE_TIME_T2MICRO = 1.0/20.0;
+        private static final double MEAN_VM1_SERVICE_TIME_T2SMALL = 1.0/30.0;
+        private static final double MEAN_VM2CPU_SERVICE_TIME_T2NANO = 1.0/12.0;
+        private static final double MEAN_VM2CPU_SERVICE_TIME_T2MICRO = 1.0/15.0;
+        private static final double MEAN_VM2CPU_SERVICE_TIME_T2SMALL = 1.0/22.0;
+        private static final double MEAN_VM2BAND_SERVICE_TIME_T2NANO = 1.0/4.0;
+        private static final double MEAN_VM2BAND_SERVICE_TIME_T2MICRO = 1.0/7.0;
+        private static final double MEAN_VM2BAND_SERVICE_TIME_T2SMALL = 1.0/9.0;
 
         public double getPricePerMinute(){
             switch (this.type){

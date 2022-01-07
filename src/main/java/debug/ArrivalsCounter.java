@@ -16,13 +16,9 @@ public class ArrivalsCounter {
         arrivalsCounterPerReplica = new HashMap<>();
         arrivalsCounter = new HashMap<>();
 
-        arrivalsCounterPerReplica.put(EventType.ARRIVALVM1, 0);
         arrivalsCounterPerReplica.put(EventType.ARRIVALS3, 0);
-        arrivalsCounterPerReplica.put(EventType.ARRIVALVM2CPU, 0);
 
-        arrivalsCounter.put(EventType.ARRIVALVM1, new BetweenRunsMetric());
         arrivalsCounter.put(EventType.ARRIVALS3, new BetweenRunsMetric());
-        arrivalsCounter.put(EventType.ARRIVALVM2CPU, new BetweenRunsMetric());
     }
 
     public void increaseCounter(EventType type){
@@ -43,7 +39,7 @@ public class ArrivalsCounter {
     public ArrayList<Double> getCounters(){
         ArrayList<Double> counters = new ArrayList<>();
 
-        EventType[] keys = {EventType.ARRIVALVM1, EventType.ARRIVALS3, EventType.ARRIVALVM2CPU};
+        EventType[] keys = {EventType.ARRIVALS3};
 
         for(EventType key: keys){
             counters.add(arrivalsCounter.get(key).getSampleMean());

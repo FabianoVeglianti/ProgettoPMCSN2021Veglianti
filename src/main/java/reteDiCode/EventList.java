@@ -14,7 +14,8 @@ public class EventList {
     public EventList(Generator generator, double current){
         eventList = new HashMap<>();
         for(EventType type: EventType.values()) {
-            if (type == EventType.ARRIVALS3 || type == EventType.ARRIVALVM1 || type == EventType.ARRIVALVM2CPU) {
+            if (type == EventType.ARRIVALS3) {
+            //    System.out.println( Math.round(1/Params.MEAN_INTERARRIVAL_S3*10)/10);
                 Event event = new Event(type, generator, current, 0, null);
                 eventList.put(type, event);
             } else {

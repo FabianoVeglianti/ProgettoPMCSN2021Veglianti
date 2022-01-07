@@ -32,7 +32,7 @@ public class BetweenRunsSystemMetrics {
         double systemAverageWait = 0.0;
         for(int i = 0; i < servers.length; i++){
             double serverDeparture = servers[i].getDeparture();
-            systemAverageWait += serverDeparture / totalDepartures * servers[i].getAverageWait();
+            systemAverageWait += serverDeparture / systemExitCounter * servers[i].getAverageWait();
         }
 
         throughput.updateMetrics(systemExitCounter / current);
