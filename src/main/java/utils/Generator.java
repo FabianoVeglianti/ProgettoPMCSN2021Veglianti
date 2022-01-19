@@ -1,6 +1,4 @@
-package reteDiCode;
-
-import desUtils.Rngs;
+package utils;
 
 public class Generator extends Rngs {
 

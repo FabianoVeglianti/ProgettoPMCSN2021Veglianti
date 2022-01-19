@@ -1,6 +1,10 @@
-package reteDiCode;
+package entity;
 
-public enum CenterEnum {
+
+/**
+ * Lists the Server of the network
+ * */
+public enum ServerEnum {
 
     VM1("VM1", 1),
     S3("S3", 2),
@@ -10,7 +14,7 @@ public enum CenterEnum {
     private final String centerName;
     private final int centerIndex;
 
-    CenterEnum(String centerName, int centerIndex) {
+    ServerEnum(String centerName, int centerIndex) {
         this.centerName = centerName;
         this.centerIndex = centerIndex;
     }

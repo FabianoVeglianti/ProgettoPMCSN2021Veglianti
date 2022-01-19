@@ -1,19 +1,27 @@
-package processorSharingSingolo;
+package entity;
 
-import reteDiCode.CenterEnum;
-import reteDiCode.EventType;
-import reteDiCode.Generator;
-import reteDiCode.SchedulingDisciplineEnum;
+import utils.Generator;
 
-import static reteDiCode.Params.*;
-import static reteDiCode.SchedulingDisciplineEnum.FIFO;
+import static config.Params.*;
+import static entity.SchedulingDisciplineType.FIFO;
 
+
+/**
+ * It models an occuring event.
+ * */
 public class Event {
 
-    private CenterEnum nextCenter;
+    private ServerEnum nextCenter;
 
     private final EventType type;
 
+
+    /**
+     * endTime keeps the Clock value at which the event will be triggered.
+     * If the event has associated a job (type is not Arrival*):
+     *      arrivalTime keeps the Clock value at which the job entered in the server;
+     *      serviceTime keeps the amount of time the server must spend on the job before the event can be triggered.
+     * */
     private double endTime;
     private double arrivalTime;
     private double serviceTime;
@@ -28,17 +36,26 @@ public class Event {
         return serviceTime;
     }
     public double getArrivalTime() { return arrivalTime; }
-    public CenterEnum getNextCenter(){
+    public ServerEnum getNextCenter(){
         return nextCenter;
     }
 
 
     /**
-    * Istanzia un nuovo evento:
-     * se l'evento è un completamento di un job ne viene effettuato il routing.
-     * se l'evento è un completamento di un job in un centro PS, l'istante di completamento dipende dai jobs nel server.
+     * If the EventType is Completation* the nextCenter variable is set to a value according to a RNG and the
+     * routing table.
+     *
+     * If the EventType is Completation* and the associated center's scheduling discipline is FIFO the endTime variable
+     * is not set immediately.
+     *
+     * If the EventType is Completation* and the associated center's scheduling discipline is PS the endTime variable is
+     * set immediately, it depends of the number of jobs in the center and it can change if the number of jobs
+     * in the center changes
+     *
+     * If the EventType is Completation* and the associated center's scheduling discipline is IS the endTime variable is
+     * set immediately, is equals to arrivalTime+serviceTime and it cannot change.
     * */
-    public Event(EventType type, Generator t, double currentTime, double numJobsInServer, SchedulingDisciplineEnum serverSchedulingDiscipline){
+    public Event(EventType type, Generator t, double currentTime, double numJobsInServer, SchedulingDisciplineType serverSchedulingDiscipline){
         this.type = type;
         double routingProbability;
         switch (type){
@@ -69,11 +86,11 @@ public class Event {
                 if(routingProbability<P10) {
                     this.nextCenter = null;
                 }else if (P10 <= routingProbability && routingProbability < P10+P11){
-                    this.nextCenter = CenterEnum.VM1;
+                    this.nextCenter = ServerEnum.VM1;
                 } else if (P10+P11 <= routingProbability && routingProbability < P10+P11+P12){
-                    this.nextCenter = CenterEnum.S3;
+                    this.nextCenter = ServerEnum.S3;
                 } else {
-                    this.nextCenter = CenterEnum.VM2CPU;
+                    this.nextCenter = ServerEnum.VM2CPU;
                 }
 
 
@@ -92,11 +109,11 @@ public class Event {
                 if(routingProbability<P20){
                     this.nextCenter = null;
                 } else if (P20 <= routingProbability && routingProbability < P20+P21) {
-                    this.nextCenter = CenterEnum.VM1;
+                    this.nextCenter = ServerEnum.VM1;
                 } else if (P20+P21 <= routingProbability && routingProbability < P20+P21+P22){
-                    this.nextCenter = CenterEnum.S3;
+                    this.nextCenter = ServerEnum.S3;
                 } else {
-                    this.nextCenter = CenterEnum.VM2CPU;
+                    this.nextCenter = ServerEnum.VM2CPU;
                 }
 
 
@@ -120,13 +137,13 @@ public class Event {
                 if(routingProbability<P30){
                     this.nextCenter = null;
                 } else if (P30 <= routingProbability && routingProbability < P30+P31){
-                    this.nextCenter = CenterEnum.VM1;
+                    this.nextCenter = ServerEnum.VM1;
                 } else if(P30+P31 <= routingProbability && routingProbability < P30+P31+P32) {
-                    this.nextCenter = CenterEnum.S3;
+                    this.nextCenter = ServerEnum.S3;
                 } else if (P30+P31+P32 <= routingProbability && routingProbability < P30+P31+P32+P33) {
-                    this.nextCenter = CenterEnum.VM2CPU;
+                    this.nextCenter = ServerEnum.VM2CPU;
                 } else {
-                    this.nextCenter = CenterEnum.VM2BAND;
+                    this.nextCenter = ServerEnum.VM2BAND;
                 }
 
                 break;
@@ -148,11 +165,11 @@ public class Event {
                 if(routingProbability<P40){
                     this.nextCenter = null;
                 } else if (P40 <= routingProbability && routingProbability < P40+P41){
-                    this.nextCenter = CenterEnum.VM1;
+                    this.nextCenter = ServerEnum.VM1;
                 } else if (P40+P41 <= routingProbability && routingProbability < P40+P41+P42){
-                    this.nextCenter = CenterEnum.S3;
+                    this.nextCenter = ServerEnum.S3;
                 } else {
-                    this.nextCenter = CenterEnum.VM2CPU;
+                    this.nextCenter = ServerEnum.VM2CPU;
                 }
 
                 break;
@@ -163,15 +180,18 @@ public class Event {
         }
     }
 
-
+    /**
+     * If the EventType is Completation* and the associated center's scheduling discipline is FIFO the endTime depends
+     * on the time the job is started and the serviceTime associated with it.
+     * */
     public void setEndTime(double startServiceTime){
         endTime = startServiceTime + serviceTime;
     }
 
     /**
-     * Aggiorna l'istante in cui l'evento occorre in base al tempo rimanente e al numero di jobs nel server.
-     * Il metodo updateTime è pensato per cambiare l'istante di completamento di un job in un centro PS all'occorrenza
-     * di un evento che cambia il numero di jobs nel centro (e dunque cambia il tasso di servizio di ciascun job).
+     * If the EventType is Completation* and the associated center's scheduling discipline is PS the endTime variable
+     * value changes as the number of jobs in the center changes.
+     * Read the documentation for more details about the formulas.
      * */
     public void updateTime(double changeTime, double numJobsInServer, boolean isNextEventArrival){
         if (isNextEventArrival) {

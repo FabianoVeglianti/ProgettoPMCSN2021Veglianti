@@ -1,4 +1,4 @@
-package desUtils;
+package utils;
 /* ------------------------------------------------------------------------- 
  * This is a Java library that can be used to evaluate the probability 
  * density functions (pdf's), cumulative distribution functions (cdf's), and 
@@ -43,8 +43,6 @@ package desUtils;
  * Latest Revision : 7-1-04
  * ------------------------------------------------------------------------- 
  */
-
-import java.math.*;
 
 public class Rvms{
     final double TINY = 1.0e-10;

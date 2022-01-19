@@ -1,5 +1,10 @@
-package reteDiCode;
+package config;
 
+
+/**
+ * Manages the network configuration in terms of EC2 instances used.
+ * It defines the EC2 instances available.
+ * */
 public class NetworkConfiguration {
 
     private enum EC2InstanceType {T2Nano, T2Micro, T2Small}

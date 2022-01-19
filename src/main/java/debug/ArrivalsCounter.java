@@ -1,12 +1,20 @@
 package debug;
 
-import reteDiCode.BetweenRunsMetric;
-import reteDiCode.EventType;
+import utils.BetweenRunsMetric;
+import entity.EventType;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * It counts arrivals from outside.
+ * In this network, arrivals from outside can only happen to the S3 center,
+ * however this class is designed for a more general scenario.
+ *
+ * It counts the arrivals that occur in each replica and, applying the Welford algorithm,
+ * it calculates the mean value between the replicas.
+ *
+ * */
 public class ArrivalsCounter {
 
     HashMap<EventType, Integer> arrivalsCounterPerReplica;
@@ -30,6 +38,7 @@ public class ArrivalsCounter {
             arrivalsCounterPerReplica.put(key, 0);
         }
     }
+
     public void commitCounters(double current){
         for(EventType key: arrivalsCounterPerReplica.keySet()){
             arrivalsCounter.get(key).updateMetrics(arrivalsCounterPerReplica.get(key)/current);

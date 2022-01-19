@@ -5,6 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+/**
+ * Abstract Writer.
+ * */
 public abstract class Writer {
 
 
@@ -12,7 +15,7 @@ public abstract class Writer {
     protected PrintWriter pw;
 
     protected void openFile() {
-        FileWriter fw = null;
+        FileWriter fw;
         try {
             fw = new FileWriter(path, false);
             BufferedWriter bw = new BufferedWriter(fw);

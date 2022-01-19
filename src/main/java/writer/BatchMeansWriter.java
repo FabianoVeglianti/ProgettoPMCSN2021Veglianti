@@ -1,10 +1,8 @@
 package writer;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
+/**
+ * Writer for BatchMeans simulations.
+ * */
 public class BatchMeansWriter extends Writer {
 
 
@@ -32,7 +30,8 @@ public class BatchMeansWriter extends Writer {
                 "VM2Band Mean Population,VM2Band Population Interval Width,VM2Band Population Autocorrelation Lag One,"+
                 "System Mean Wait,System Wait Interval Width,System Wait Autocorrelation Lag One,"+
                 "System Mean Throughput,System Throughput Interval Width,System Throughput Autocorrelation Lag One,"+
-                "System Mean Population,System Population Interval Width,System Population Autocorrelation Lag One");
+                "System Mean Population,System Population Interval Width,System Population Autocorrelation Lag One,"+
+                "Price Per Minute,Price Per Minute Interval Width");
     }
 
 }

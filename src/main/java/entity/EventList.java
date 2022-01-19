@@ -1,21 +1,22 @@
-package reteDiCode;
+package entity;
 
-import processorSharingSingolo.Event;
+import entity.EventType;
+import utils.Generator;
+import entity.Event;
 
 import java.util.HashMap;
 
+/**
+ * It maintains the next Event for each eventType.
+ * */
 public class EventList {
 
     HashMap<EventType, Event> eventList;
 
-    /*
-    * Nota: questo costrutture dovrebbe essere chiamato una sola volta e il valore di current dovrebbe essere 0.
-    * */
     public EventList(Generator generator, double current){
         eventList = new HashMap<>();
         for(EventType type: EventType.values()) {
             if (type == EventType.ARRIVALS3) {
-            //    System.out.println( Math.round(1/Params.MEAN_INTERARRIVAL_S3*10)/10);
                 Event event = new Event(type, generator, current, 0, null);
                 eventList.put(type, event);
             } else {
@@ -25,7 +26,8 @@ public class EventList {
     }
 
     /*
-    * Usato anche per aggiornare gli eventi di completamento quando cambia il numero di jobs in un nodo
+    * Used also to update the Completation* Events if the associated center scheduling discipline is PS and the number
+    * of jobs in the center changes.
     * */
     public void putEvent(EventType type, Event event){
         eventList.put(type, event);

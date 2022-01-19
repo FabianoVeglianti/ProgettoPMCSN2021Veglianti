@@ -1,20 +1,29 @@
 package debug;
 
-import reteDiCode.BetweenRunsMetric;
-import reteDiCode.CenterEnum;
+import utils.BetweenRunsMetric;
+import entity.ServerEnum;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * It calculate routing frequencies and keeps them in a list of RouteData.
+ *
+ * RouteData calculate the routing frequency between source and destination.
+ * Source and Destination are ServerEnum data types, but destination can be null to indicate the outbound routing.
+ *
+ *
+ * */
+
 public class RoutingMatrix {
 
     private static class RouteData {
-        private final CenterEnum source;
-        private final CenterEnum destination;
+        private final ServerEnum source;
+        private final ServerEnum destination;
         private int counter;
         private BetweenRunsMetric estimation;
 
-        private RouteData(CenterEnum source, CenterEnum destination){
+        private RouteData(ServerEnum source, ServerEnum destination){
             this.source = source;
             this.destination = destination;
 
@@ -43,22 +52,17 @@ public class RoutingMatrix {
 
     public RoutingMatrix(){
         routeDataList = new ArrayList<>();
-        for(CenterEnum source: CenterEnum.values()){
+        for(ServerEnum source: ServerEnum.values()){
             RouteData data = new RouteData(source, null);
             routeDataList.add(data);
-            for (CenterEnum destination: CenterEnum.values()){
+            for (ServerEnum destination: ServerEnum.values()){
                 data = new RouteData(source, destination);
                 routeDataList.add(data);
             }
         }
-        int i = 0;
-        for(RouteData routeData: routeDataList){
-            System.out.println("Elemento " + i + ": " + routeData.source + " " + routeData.destination);
-            i++;
-        }
     }
 
-    private RouteData findRouteData(CenterEnum source, CenterEnum destination){
+    private RouteData findRouteData(ServerEnum source, ServerEnum destination){
         for(RouteData data: routeDataList){
             if(destination == null){
                 if (data.source.equals(source) && data.destination == null)
@@ -72,20 +76,19 @@ public class RoutingMatrix {
             }
 
         }
-        //non dovrebbe mai essere eseguito
         return null;
     }
 
-    public void increaseCounter(CenterEnum source, CenterEnum destination){
+    public void increaseCounter(ServerEnum source, ServerEnum destination){
         RouteData data = findRouteData(source, destination);
         assert data != null;
         data.increaseCounter();
     }
 
     public void commitCounters(){
-        HashMap<CenterEnum, Integer> mapSourceDepartures = new HashMap<>();
-        for(CenterEnum centerEnum: CenterEnum.values()){
-            mapSourceDepartures.put(centerEnum, 0);
+        HashMap<ServerEnum, Integer> mapSourceDepartures = new HashMap<>();
+        for(ServerEnum serverEnum : ServerEnum.values()){
+            mapSourceDepartures.put(serverEnum, 0);
         }
 
         for(RouteData data: routeDataList){
@@ -106,13 +109,13 @@ public class RoutingMatrix {
     public ArrayList<Double> getRoutingFrequencies(){
         ArrayList<Double> frequencies = new ArrayList<>();
 
-        CenterEnum[] centerEnums = {CenterEnum.VM1, CenterEnum.S3, CenterEnum.VM2CPU, CenterEnum.VM2BAND};
+        ServerEnum[] serverEnums = {ServerEnum.VM1, ServerEnum.S3, ServerEnum.VM2CPU, ServerEnum.VM2BAND};
 
-        for(CenterEnum source: centerEnums){
+        for(ServerEnum source: serverEnums){
             RouteData data = findRouteData(source, null);
             assert data != null;
             frequencies.add(data.estimation.getSampleMean());
-            for(CenterEnum destination: centerEnums){
+            for(ServerEnum destination: serverEnums){
                 data = findRouteData(source, destination);
                 assert data != null;
                 frequencies.add(data.estimation.getSampleMean());

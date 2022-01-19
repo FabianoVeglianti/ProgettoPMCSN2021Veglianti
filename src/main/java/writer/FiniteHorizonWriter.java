@@ -1,17 +1,13 @@
 package writer;
 
-
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
-public class CSVWriter extends Writer{
+/**
+ * Writer for FiniteHorizon simulations.
+ * */
+public class FiniteHorizonWriter extends Writer{
 
 
 
-    public CSVWriter(char configuration, String discipline){
+    public FiniteHorizonWriter(char configuration, String discipline){
         String prefix = "configuration_" + configuration + "_" + discipline + "_";
         path = prefix + "fh_metrics.csv";
         openFile();
@@ -34,7 +30,8 @@ public class CSVWriter extends Writer{
                 "VM2Band Mean Population,VM2Band Population Interval Width,"+
                 "System Mean Wait,System Wait Interval Width,"+
                 "System Mean Throughput,System Throughput Interval Width,"+
-                "System Mean Population,System Population Interval Width,Price,Simulation Time");
+                "System Mean Population,System Population Interval Width," +
+                "Price Per Minute,Price Per Minute Interval Width,Simulation Time");
 
     }
 

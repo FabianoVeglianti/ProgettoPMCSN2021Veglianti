@@ -1,5 +1,9 @@
-package reteDiCode;
+package entity;
 
+
+/**
+ * Lists the EventType
+ * */
 public enum EventType {
 
     ARRIVALS3(),
@@ -7,8 +11,5 @@ public enum EventType {
     COMPLETATIONS3(),
     COMPLETATIONVM2CPU(),
     COMPLETATIONVM2BAND();
-
-
-
 
 }

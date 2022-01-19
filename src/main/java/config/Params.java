@@ -1,33 +1,10 @@
-package reteDiCode;
+package config;
+
+/**
+ * It set the simulation parameters.
+ * */
 
 public class Params {
-
-    /*
-    *  private static final double P01 = 0;
-    private static final double P02 = 1;
-    private static final double P03 = 0;
-
-    public static final double P10 = 0.4;
-    public static final double P11 = 0.1;
-    public static final double P12 = 0;
-    public static final double P13 = 0.5;
-
-    public static final double P20 = 0;
-    public static final double P21 = 0.8;
-    public static final double P22 = 0;
-    public static final double P23 = 0.2;
-
-    public static final double P30 = 0.2;
-    public static final double P31 = 0.2;
-    public static final double P32 = 0;
-    public static final double P33 = 0;
-    public static final double P34 = 0.6;
-
-    public static final double P40 = 1;
-    public static final double P41 = 0;
-    public static final double P42 = 0;
-    public static final double P43 = 0;
-    * */
 
     //routing matrix
     private static final double P01 = 0;
@@ -70,21 +47,21 @@ public class Params {
     public static double VM2BAND_PRICE_PER_MINUTE;
 
     //simulations enablers
-    public static final boolean runFiniteHorizonSimulation = false;
+    public static final boolean runFiniteHorizonSimulation = true;
     public static final boolean runBatchMeansSimulation = true;
 
     //simulations parameters
     public static final double NUM_REPLICAS = 64;
 
     //finite horizon parameters
-    public static final int FH_MIN_COUNTER_LIMIT = 2;
-    public static final double FH_MAX_COUNTER_LIMIT = 100;
+    public static final int FH_TIME_INCREASE_STEP = 2;
+    public static final double FH_MAX_TIME_LIMIT = 100;
 
     //batch means parameters
-    public static final int BM_NUM_BATCHES = 64;
+    public static final int BM_NUM_BATCHES = 512;
     public static final int BM_NUM_EVENTS = 1048576;
 
     //debug parameters
-    public static final boolean DEBUG_MODE_ON = false;
+    public static final boolean DEBUG_MODE_ON = true;
     public static final int DEBUG_ITERATIONS = 100000;
 }

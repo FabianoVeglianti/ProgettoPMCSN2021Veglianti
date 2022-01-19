@@ -20,13 +20,11 @@
  * Latest Revision   : 6-16-06
  * -------------------------------------------------------------------------
  */
-package desUtils;
+package utils;
 
-
-import reteDiCode.CenterEnum;
-
-import java.text.DecimalFormat;
-
+/**
+ * Class used to compute one lag autocorrelation using a one-pass algorithm.
+ * */
 public class AcsModified {
 
     private static final int K = 1;               /* K is the maximum lag          */
@@ -71,7 +69,7 @@ public class AcsModified {
     }
 
 
-    public double getAutocorrelationWithLagOneComputation(){
+    public double getAutocorrelationWithLagOneComputation() {
         return cosum[1] / cosum[0];
     }
 

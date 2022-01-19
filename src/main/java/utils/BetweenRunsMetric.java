@@ -1,18 +1,21 @@
-package reteDiCode;
+package utils;
 
-import desUtils.AcsModified;
-import desUtils.Rvms;
+import utils.AcsModified;
+import utils.Rvms;
 
+/**
+ * Class that apply Welford algorithm to compute sample mean and variance.
+ * */
 public class BetweenRunsMetric {
 
-    private static double CONFIDENCE = 0.95;
+    private static final double CONFIDENCE = 0.95;
     private static Rvms rvms = new Rvms();
 
     private long i;
     private double sampleMean;
     private double vi;
 
-    private AcsModified acs = null;
+    private AcsModified acs;
 
     public BetweenRunsMetric(){
         sampleMean = 0.0;
@@ -37,7 +40,7 @@ public class BetweenRunsMetric {
         if(i <= 2){
             double diff = newValue - sampleMean;
             sampleMean = sampleMean + diff / i;
-            vi = vi + diff * diff * (i-1) / i;
+            vi = vi + diff * diff * (i - 1) / i;
             acs.insertValue(newValue);
         } else {
             double diff = newValue - sampleMean;
@@ -51,10 +54,7 @@ public class BetweenRunsMetric {
         return sampleMean;
     }
 
-/*    public double getSampleVariance(){
-        return vi / i;
-    }
-*/
+
     public double[] getConfidenceIntervalAndAutocorrelationLagOne(){
         double alpha = 1-CONFIDENCE;
         double criticalValue = rvms.idfStudent(i-1, 1 - alpha / 2);

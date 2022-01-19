@@ -1,11 +1,9 @@
 package writer;
 
-        import java.io.BufferedWriter;
-        import java.io.FileWriter;
-        import java.io.IOException;
-        import java.io.PrintWriter;
-
-public class DebugCSVWriter extends Writer{
+/**
+ * Writer for Debug simulations.
+ * */
+public class DebugWriter extends Writer{
 
 
     protected void writeHeader(){
@@ -15,7 +13,7 @@ public class DebugCSVWriter extends Writer{
 
 
 
-    public DebugCSVWriter(){
+    public DebugWriter(){
         super();
         path = "debug.csv";
         super.openFile();

@@ -1,21 +1,19 @@
-package processorSharingSingolo;
+package entity;
 
-import reteDiCode.BetweenRunsMetric;
-import reteDiCode.CenterEnum;
-import reteDiCode.SchedulingDisciplineEnum;
+import utils.BetweenRunsMetric;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import static reteDiCode.SchedulingDisciplineEnum.*;
+import static entity.SchedulingDisciplineType.*;
 
 public class Server {
 
     //fixed attributes
-    private final CenterEnum type;
-    private final SchedulingDisciplineEnum discipline;
-    public SchedulingDisciplineEnum getDiscipline() { return discipline; }
-    public CenterEnum getType() {
+    private final ServerEnum type;
+    private final SchedulingDisciplineType discipline;
+    public SchedulingDisciplineType getDiscipline() { return discipline; }
+    public ServerEnum getType() {
         return type;
     }
 
@@ -23,8 +21,8 @@ public class Server {
     //between runs attributes
     private BetweenRunsMetric throughput;
     private BetweenRunsMetric wait;
-    private BetweenRunsMetric utilization;
     private BetweenRunsMetric population;
+    private BetweenRunsMetric serviceTime;
 
     //for batch means only
     private double currentBatchStartTime;
@@ -34,22 +32,28 @@ public class Server {
     }
 
     public  void updateBetweenRunsMetrics(double current){
-        //questi operazioni non ha effetto se non stiamo effettuando simulazioni batch means
+        //these operations have no effect if the simulation is not batch means
         double lastArrivalTimeInBatch = lastArrivalTime - currentBatchStartTime;
         double currentBatchDuration = current - currentBatchStartTime;
 
-        //in teoria si dovrebbe avere departure/lastArrivalTime, ma ciò crea problemi nel BM
         if(lastArrivalTimeInBatch != 0) {
             throughput.updateMetrics(departure / lastArrivalTimeInBatch);
-            population.updateMetrics(node / lastArrivalTimeInBatch);
+            population.updateMetrics(node / currentBatchDuration);
         }
         if(departure != 0) {
             wait.updateMetrics(node / departure);
+            if (type == ServerEnum.S3) {
+                serviceTime.updateMetrics(node / departure);
+            } else {
+                serviceTime.updateMetrics(server / departure);
+            }
         }
-        utilization.updateMetrics(server/currentBatchDuration);
 
 
+    }
 
+    public double[] getServiceTimeInterval(){
+        return serviceTime.getConfidenceInterval();
     }
 
     public double[] getThroughputConfidenceInterval(){
@@ -60,9 +64,7 @@ public class Server {
         return wait.getConfidenceInterval();
     }
 
-    public double[] getUtilitationInterval() {return utilization.getConfidenceInterval(); }
-
-    public double[] getPopulationInterval() {return population.getConfidenceInterval(); }
+    public double[] getPopulationConfidenceInterval() {return population.getConfidenceInterval(); }
 
     public double[] getThroughputConfidenceIntervalAndAutocorrelationLagOne(){
         return throughput.getConfidenceIntervalAndAutocorrelationLagOne();
@@ -79,8 +81,8 @@ public class Server {
     public void resetBetweenRunsMetrics(){
         wait.resetValue();
         throughput.resetValue();
-        utilization.resetValue();
         population.resetValue();
+        serviceTime.resetValue();
     }
 
 
@@ -88,19 +90,12 @@ public class Server {
     private double node;
     private double server;
     private double departure;
-    private int exitCounter;
     private double lastArrivalTime;
     ArrayList<Event> jobsInCenterList;
-    private int arrivi = 0;
 
-    public void aumentaArrivi(){
-        arrivi+=1;
-    }
 
     public ArrayList<Event> getJobsInCenterList() { return jobsInCenterList;}
-    public int getArrivi(){
-        return arrivi;
-    }
+
     public double getDeparture(){
         return departure;
     }
@@ -109,13 +104,6 @@ public class Server {
         departure +=1;
     }
 
-    public double getExitCounter(){
-        return (double)exitCounter;
-    }
-
-    public void increaseExitCounter(){
-        exitCounter++;
-    }
 
     public int getNumJobsInCenter(){
         return jobsInCenterList.size();
@@ -123,7 +111,6 @@ public class Server {
 
     public void resetInRunMetrics(){
         departure = 0.0;
-        exitCounter = 0;
         node = 0.0;
         server = 0.0;
     }
@@ -140,18 +127,18 @@ public class Server {
         }
     }
 
-    public Server(CenterEnum type, SchedulingDisciplineEnum discipline){
+    public Server(ServerEnum type, SchedulingDisciplineType discipline){
         this.type = type;
         this.discipline = discipline;
         jobsInCenterList = new ArrayList<>();
 
         departure = 0.0;
-        exitCounter = 0;
+
 
         throughput = new BetweenRunsMetric();
         wait = new BetweenRunsMetric();
-        utilization = new BetweenRunsMetric();
         population = new BetweenRunsMetric();
+        serviceTime = new BetweenRunsMetric();
 
         node = 0.0;
         server = 0.0;
@@ -159,6 +146,17 @@ public class Server {
         currentBatchStartTime = 0.0;
     }
 
+    /**
+     * Find the position of the Event event in the queue of the center.
+     * The queue is kept sorted based on the endTime value of the jobs.
+     *
+     * If the center scheduling discipline is FIFO the current event must be insert at the end of the queue becuase
+     * the endTime of the current event is after the endTime of the (old) last job in the queue.
+     *
+     * If the center scheduling discipline is PS or IS the position of the current event depends on the endTime value of
+     * the job: the ordering of the queue is used to apply the binary search to efficiently find the position in which
+     * to insert the current event.
+     * */
     private int findPosition(Event event){
         if(discipline == FIFO){
             if(jobsInCenterList.size() > 0){
@@ -191,6 +189,11 @@ public class Server {
         }
     }
 
+    /**
+     * Insert the job associated to the Event event in the queue.
+     * If the center scheduling discipline is FIFO, the endTime value of event is set.
+     * It uses the method findPosition() to find the position in which to insert the job.
+     * */
     public int insertJobInCenter(Event event, double current){
         int position = 0;
         if(jobsInCenterList.size() == 0){
@@ -198,21 +201,25 @@ public class Server {
                 event.setEndTime(current);
             }
         } else{
-            position = findPosition(event); //la posizione è determinata in base alla disciplina di scheduling
+            position = findPosition(event);
             if(discipline == FIFO){
                 event.setEndTime(jobsInCenterList.get(position-1).getEndTime());
             }
         }
-            jobsInCenterList.add(position, event);
+        jobsInCenterList.add(position, event);
 
 
         lastArrivalTime = current;
-        this.aumentaArrivi();  //DA ELIMINARE
+
         return position;
     }
 
     private double getLastArrivalTime(){return lastArrivalTime;}
 
+    /**
+     * Remove the head of the queue.
+     * The queue is kept ordered, so the next event is the first of the queue.
+     * */
     public void removeNextEvent(){
         if(jobsInCenterList.size()>0){
             jobsInCenterList.remove(0);
@@ -221,19 +228,24 @@ public class Server {
 
     public Event getNextCompletation(double current){
         if (jobsInCenterList.size()>0) {
-            Event nextCompletation = jobsInCenterList.get(0);
-            return nextCompletation;
+            return jobsInCenterList.get(0);
         } else{
-                return null;
-            }
+            return null;
+        }
     }
 
+    /**
+     * Used only if the scheduling discipline is PS.
+     * */
     public void updateJobsTimeAfterCompletation(Event nextEvent){
         for(Event job : jobsInCenterList){
             job.updateTime(nextEvent.getEndTime(), jobsInCenterList.size(), false);
         }
     }
 
+    /**
+     * Used only if the scheduling discipline is PS.
+     * */
     public void updateJobsTimeAfterArrival(Event nextEvent){
         for(Event job : jobsInCenterList){
             job.updateTime(nextEvent.getEndTime(), jobsInCenterList.size(), true);
@@ -249,7 +261,7 @@ public class Server {
     }
 
     public double getServiceTime() {
-        if(type != CenterEnum.S3) {
+        if(type != ServerEnum.S3) {
             return server / departure;
         } else {
             return node / departure;
@@ -270,11 +282,10 @@ public class Server {
         System.out.println("   average interarrival time =   " + f.format(lastArrivalTime / departure));
         System.out.println("   average wait ............ =   " + f.format(node/ departure));
         System.out.println("   average service time .... =   " + f.format(server/ departure));
-        System.out.println("   average # in the node ... =   " + f.format(node / lastArrivalTime));
-        System.out.println("   utilization ............. =   " + f.format(server / lastArrivalTime));
+        System.out.println("   average # in the node ... =   " + f.format(node / current));
+        System.out.println("   utilization ............. =   " + f.format(server / current));
         // dovrebbe essere lastInterarrival al posto di current
         System.out.println("   lambda .................. =   " + f.format(departure/lastArrivalTime));
-        System.out.println("   arrivi .................. =   " + f.format(arrivi));
         System.out.println("   jobs nel centro ......... =   " + f.format(jobsInCenterList.size()));
         System.out.println("");
     }
