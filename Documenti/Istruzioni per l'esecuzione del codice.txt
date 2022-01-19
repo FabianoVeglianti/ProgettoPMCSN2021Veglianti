@@ -1,0 +1,9 @@
+Le simulazioni si possono avviare eseguendo il codice contenuto nella classe Runner.java
+
+L'esecuzione del codice così come consegnato provoca l'esecuzioni delle simulazioni FH e BM, non viene eseguita la modalità debug.
+
+Per abilitare/disabilitare le simulazioni si cambino i parametri runFiniteHorizonSimulation o runBatchMeansSimulation o DEBUG_MODE_ON nel file Params.java.
+
+Per cambiare i parametri delle simulazioni si faccia riferimento al file Params.java.
+
+Per cambiare i parametri delle macchine virtuali si faccia riferimento al file NetworkConfiguration.java.

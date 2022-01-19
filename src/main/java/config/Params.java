@@ -62,6 +62,6 @@ public class Params {
     public static final int BM_NUM_EVENTS = 1048576;
 
     //debug parameters
-    public static final boolean DEBUG_MODE_ON = true;
+    public static final boolean DEBUG_MODE_ON = false;
     public static final int DEBUG_ITERATIONS = 100000;
 }

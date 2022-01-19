@@ -105,7 +105,7 @@ public class Runner {
                 if (Params.runFiniteHorizonSimulation) {
                     //for each (discipline, configuration) pair it opens a new file
                     FiniteHorizonWriter writer = new FiniteHorizonWriter(actualConfiguration, actualDiscipline.name());
-                    System.out.println("Configurazione: " + actualConfiguration);
+                    System.out.println("FH - Configurazione: " + actualConfiguration);
 
                     network = new Network();
                     price = new Price();
@@ -119,7 +119,7 @@ public class Runner {
                 if (Params.runBatchMeansSimulation) {
                     //for each (discipline, configuration) pair it opens a new file
                     batchMeansWriter = new BatchMeansWriter(actualConfiguration, actualDiscipline.name());
-                    System.out.println("Configurazione: " + actualConfiguration);
+                    System.out.println("BM - Configurazione: " + actualConfiguration);
 
                     network = new Network();
                     price = new Price();
@@ -145,7 +145,7 @@ public class Runner {
         currentTimeLimit = Double.MAX_VALUE;
 
         for(int i = 0; i < Params.NUM_REPLICAS; i++) {
-            System.out.println("Configurazione: " + actualConfiguration + ". Replica: " + i + " ...");
+            System.out.println("Debug - Configurazione: " + actualConfiguration + ". Replica: " + i + " ...");
             currentTime = START;
 
             //currentLedger is a ledger that memorize all the values of currentTime
@@ -346,7 +346,7 @@ public class Runner {
             }
             generator.plantSeeds(123456789);
             setArrivalRate(arrivalRate);
-            System.out.println("Arrival Rate = " + arrivalRate);
+            System.out.println("BM - Arrival Rate = " + arrivalRate);
 
 
             currentTime = START;
